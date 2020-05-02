@@ -1,7 +1,7 @@
 module Main where
 
 import Lib
-import Game
+import GameUx
 
 main :: IO ()
 main = manualRun

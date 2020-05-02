@@ -3,12 +3,12 @@ import Data.Maybe
 
 import Data.List
 
-data Level = Small | Medium | Large | SuperLarge
+data Level = Small | Medium | Large | SuperLarge deriving (Eq, Ord, Show)
 type Player = Int
 data Action = Xu
             | Attack Player Level
             | Defend Level
-            | NoAction
+            | NoAction deriving (Eq, Ord, Show)
 
 type GameState = [Maybe Int] -- list of energies by player, None if player is defeated
 data GameResult = Continue GameState
@@ -135,68 +135,6 @@ runGameOneStepWithResults as gs = do
                             else Nothing
                     ))
             in return $ foldr (\p gr -> PlayerDefeated p gr) (Continue nextState) (fromJust defeated)
-
-
-
-manualRun :: IO ()
-manualRun = do
-    putStrLn "Welcome to 波波攒"
-    putStrLn "Enter Number of players"
-    s <- getLine
-    let n = read s :: Int
-    let initialState = replicate n (Just 0)
-    loop initialState
-
-
-parseLevel :: Char -> Either String Level
-parseLevel 's' = return Small
-parseLevel 'm' = return Medium
-parseLevel 'l' = return Large
-parseLevel 'S' = return SuperLarge
-parseLevel _ = Left "Unrecognized level, must be (s)mall (m)edium (l)arge (S)uperLarge"
-
-
-
-parseAction :: String -> Either String Action
-parseAction ('c':_) = return Xu
-parseAction ('a':x:l:_) = do
-    let n = read [x] :: Int
-    l' <- parseLevel l
-    return (Attack n l')
-parseAction ('d':l:_) = do
-    l' <- parseLevel l
-    return (Defend l')
-parseAction ('n':_) = return NoAction
-parseAction _ = Left "Unrecognized action, must be (c)harge, (a)ttack[player][level], (d)efend[level]"
-
-getAction :: IO Action
-getAction = do 
-    s <- getLine
-    case parseAction s of
-        Left str -> putStrLn str >> getAction
-        Right a -> return a
-    
-    
-loop :: GameState ->  IO ()
-loop gs = do
-    putStrLn "Current Round, Charges:"
-    putStrLn (show gs)
-    -- get action for all player
-    actions <- mapM (\idx -> do
-        putStrLn ("Player " ++ show idx ++ ": Enter action:")
-        getAction 
-        ) [0..(length gs - 1)] 
-    case runGameOneStepWithResults actions gs of 
-        Left str -> do 
-            putStrLn str
-            loop gs
-        Right res -> 
-            let handleResult r = case r of 
-                    Winner x -> putStrLn ("Player " ++ show x ++ " won the game!") >> return ()
-                    Continue gs' -> loop gs'
-                    PlayerDefeated x r' -> putStrLn ("Player " ++ show x ++ " lost.") >> handleResult r'
-            in handleResult res
-
 
 
 
